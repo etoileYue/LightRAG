@@ -766,3 +766,25 @@ def lazy_external_import(module_name: str, class_name: str) -> Callable[..., Any
         return cls(*args, **kwargs)
 
     return import_class
+
+def find_and_remove_markdown_title(md_content):
+    headers = []
+    in_code_block = False
+    content_without_title = []
+
+    for line in md_content.split("\n"):
+        if line.startswith(('```', '~~~')):
+            in_code_block = not in_code_block
+            content_without_title.append(line)
+            continue
+
+        if not in_code_block:
+            title = re.match(r'^(#{1,6})(\s+)(.*)$', line)
+            if title:
+                level = len(title.group(1))
+                content = title.group(3).strip()
+                headers.append(f"{'#' * level} {content}")
+            else:
+                content_without_title.append(line)
+
+    return '\n'.join(headers), '\n'.join(content_without_title)

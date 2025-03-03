@@ -25,6 +25,7 @@ from .utils import (
     statistic_data,
     get_conversation_turns,
     verbose_debug,
+    find_and_remove_markdown_title
 )
 from .base import (
     BaseGraphStorage,
@@ -60,24 +61,27 @@ def chunking_by_token_size(
                 new_chunks.append((len(_tokens), chunk))
         else:
             for chunk in raw_chunks:
+                titles, chunk = find_and_remove_markdown_title(chunk)
+                _titles_tokens = encode_string_by_tiktoken(titles, model_name=tiktoken_model)
                 _tokens = encode_string_by_tiktoken(chunk, model_name=tiktoken_model)
-                if len(_tokens) > max_token_size:
+                if len(_tokens) + len(_titles_tokens) > max_token_size:
                     for start in range(
-                        0, len(_tokens), max_token_size - overlap_token_size
+                        0, len(_tokens) + len(_titles_tokens), max_token_size - overlap_token_size
                     ):
                         chunk_content = decode_tokens_by_tiktoken(
-                            _tokens[start : start + max_token_size],
+                            _tokens[start : start + max_token_size - len(_titles_tokens)],
                             model_name=tiktoken_model,
                         )
                         new_chunks.append(
-                            (min(max_token_size, len(_tokens) - start), chunk_content)
+                            (min(max_token_size, len(_tokens) + len(_titles_tokens) - start), titles, chunk_content)
                         )
                 else:
-                    new_chunks.append((len(_tokens), chunk))
-        for index, (_len, chunk) in enumerate(new_chunks):
+                    new_chunks.append((len(_tokens) + len(_titles_tokens), titles, chunk))
+        for index, (_len, title, chunk) in enumerate(new_chunks):
             results.append(
                 {
                     "tokens": _len,
+                    "titles": title,
                     "content": chunk.strip(),
                     "chunk_order_index": index,
                 }
@@ -92,6 +96,7 @@ def chunking_by_token_size(
             results.append(
                 {
                     "tokens": min(max_token_size, len(tokens) - start),
+                    "titles": None, # todo
                     "content": chunk_content.strip(),
                     "chunk_order_index": index,
                 }
@@ -1245,6 +1250,7 @@ async def _find_most_related_text_unit_from_entities(
     for index, (this_text_units, this_edges) in enumerate(zip(text_units, edges)):
         for c_id in this_text_units:
             if c_id not in all_text_units_lookup:
+                all_text_units_lookup[c_id] = index
                 tasks.append((c_id, index, this_edges))
 
     results = await asyncio.gather(
