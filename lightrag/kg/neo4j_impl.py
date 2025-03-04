@@ -194,8 +194,8 @@ class Neo4JStorage(BaseGraphStorage):
             return single_result["node_exists"]
 
     async def has_edge(self, source_node_id: str, target_node_id: str) -> bool:
-        entity_name_label_source = source_node_id.strip('"')
-        entity_name_label_target = target_node_id.strip('"')
+        entity_name_label_source = source_node_id.strip('"').strip('`')
+        entity_name_label_target = target_node_id.strip('"').strip('`')
 
         async with self._driver.session(database=self._DATABASE) as session:
             query = (

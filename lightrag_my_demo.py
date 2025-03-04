@@ -68,7 +68,6 @@ async def main():
         rag = LightRAG(
             working_dir=WORKING_DIR,
             llm_model_func=llm_model_func,
-            # 构建一个类的作用只是为了存储相关信息吗
             embedding_func=EmbeddingFunc(
                 embedding_dim=embedding_dimension,
                 max_token_size=8192,
@@ -77,14 +76,14 @@ async def main():
             graph_storage="Neo4JStorage"
         )
 
-        # with open("../books/test_tabletest.md", "r", encoding="utf-8") as f:
-        #     await rag.ainsert(f.read(), split_by_character="@data@")
+        with open("./resources/short.md", "r", encoding="utf-8") as f:
+            await rag.ainsert(f.read(), split_by_character="@data@")
 
-        md_directory = "/workspace/docx2md"
-        for filename in os.listdir(md_directory):
-            if filename.endswith(".md"):
-                with open(os.path.join(md_directory, filename), "r", encoding="utf-8") as f:
-                    await rag.ainsert(f.read(), split_by_character="@data@")
+        # md_directory = "./resources"
+        # for filename in os.listdir(md_directory):
+        #     if filename.endswith(".md"):
+        #         with open(os.path.join(md_directory, filename), "r", encoding="utf-8") as f:
+        #             await rag.ainsert(f.read(), split_by_character="@data@")
         
         # Perform naive search
         # print(
