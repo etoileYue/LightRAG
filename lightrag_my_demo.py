@@ -4,6 +4,7 @@ from lightrag import LightRAG, QueryParam
 from lightrag.llm.openai import openai_complete_if_cache, openai_embed
 from lightrag.utils import EmbeddingFunc
 import numpy as np
+from lightrag.kg.shared_storage import initialize_pipeline_status
 import traceback
 
 WORKING_DIR = "./dickens"
@@ -56,43 +57,51 @@ async def test_funcs():
 
 # asyncio.run(test_funcs())
 
+async def initialize_rag():
+    # embedding_dimension = await get_embedding_dim()
+    embedding_dimension = 1024
+    print(f"Detected embedding dimension: {embedding_dimension}")
+
+    rag = LightRAG(
+        working_dir=WORKING_DIR,
+        llm_model_func=llm_model_func,
+        embedding_func=EmbeddingFunc(
+            embedding_dim=embedding_dimension,
+            max_token_size=8192,
+            func=embedding_func,
+        ),
+        graph_storage="Neo4JStorage"
+    )
+
+    await rag.initialize_storages()
+    await initialize_pipeline_status()
+
+    return rag
 
 async def main():
     try:
-        # 通过发送一条测试text，获得返回结果后得到embedding的维度
-        # 应该可以直接写出来1024（如果事先知道的话），优化运行速度
-        # embedding_dimension = await get_embedding_dim()
-        embedding_dimension = 1024
-        print(f"Detected embedding dimension: {embedding_dimension}")
-
-        rag = LightRAG(
-            working_dir=WORKING_DIR,
-            llm_model_func=llm_model_func,
-            embedding_func=EmbeddingFunc(
-                embedding_dim=embedding_dimension,
-                max_token_size=8192,
-                func=embedding_func,
-            ),
-            graph_storage="Neo4JStorage"
-        )
+        # Initialize RAG instance
+        rag = await initialize_rag()
 
         with open("./resources/short.md", "r", encoding="utf-8") as f:
-            await rag.ainsert(f.read(), split_by_character="@data@")
+            await rag.ainsert(f.read())
 
-        # md_directory = "./resources"
-        # for filename in os.listdir(md_directory):
-        #     if filename.endswith(".md"):
-        #         with open(os.path.join(md_directory, filename), "r", encoding="utf-8") as f:
-        #             await rag.ainsert(f.read(), split_by_character="@data@")
-        
-        # Perform naive search
+        # Perform hybrid search
         # print(
         #     await rag.aquery(
-        #         "活着讲了一个什么故事?", param=QueryParam(mode="naive")
+        #         "光启公司从2019年至2021年的财务情况如何，可以告诉我具体数据吗？",
+        #         param=QueryParam(mode="hybrid"),
         #     )
         # )
 
         '''
+        # Perform naive search
+        print(
+            await rag.aquery(
+                "What are the top themes in this story?", param=QueryParam(mode="naive")
+            )
+        )
+
         # Perform local search
         print(
             await rag.aquery(
@@ -109,21 +118,8 @@ async def main():
         )
         '''
 
-        # Perform hybrid search
-        # print(
-        #     await rag.aquery(
-        #         "活着讲了什么故事?",
-        #         param=QueryParam(mode="hybrid"),
-        #     )
-        # )
-        # print(
-        #     await rag.aquery(
-        #         "光启公司从2019年至2021年的财务情况如何，可以告诉我具体数据吗？",
-        #         param=QueryParam(mode="hybrid"),
-        #     )
-        # )
     except Exception as e:
-        print(f"An error occurred: {type(e).__name__}: {e}")
+        print(f"An error occurred: {type(e).__name__}:{e}")
         traceback.print_exc()
 
 
