@@ -95,56 +95,55 @@ class Neo4JStorage(BaseGraphStorage):
             connection_timeout=CONNECTION_TIMEOUT,
             connection_acquisition_timeout=CONNECTION_ACQUISITION_TIMEOUT,
         ) as _sync_driver:
-            for database in (DATABASE, None):
-                self._DATABASE = database
-                connected = False
+            database = DATABASE
+            self._DATABASE = database
 
-                try:
-                    with _sync_driver.session(database=database) as session:
-                        try:
-                            session.run("MATCH (n) RETURN n LIMIT 0")
-                            logger.info(f"Connected to {database} at {URI}")
-                            connected = True
-                        except neo4jExceptions.ServiceUnavailable as e:
-                            logger.error(
-                                f"{database} at {URI} is not available".capitalize()
-                            )
-                            raise e
-                except neo4jExceptions.AuthError as e:
-                    logger.error(f"Authentication failed for {database} at {URI}")
-                    raise e
-                except neo4jExceptions.ClientError as e:
-                    if e.code == "Neo.ClientError.Database.DatabaseNotFound":
-                        logger.info(
-                            f"{database} at {URI} not found. Try to create specified database.".capitalize()
+            try:
+                with _sync_driver.session(database=database) as session:
+                    try:
+                        session.run("MATCH (n) RETURN n LIMIT 0")
+                        logger.info(f"Connected to {database} at {URI}")
+                        connected = True
+                    except neo4jExceptions.ServiceUnavailable as e:
+                        logger.error(
+                            f"{database} at {URI} is not available".capitalize()
                         )
-                        try:
-                            with _sync_driver.session() as session:
-                                session.run(
-                                    f"CREATE DATABASE `{database}` IF NOT EXISTS"
+                        raise e
+            except neo4jExceptions.AuthError as e:
+                logger.error(f"Authentication failed for {database} at {URI}")
+                raise e
+            except neo4jExceptions.ClientError as e:
+                if e.code == "Neo.ClientError.Database.DatabaseNotFound":
+                    logger.info(
+                        f"{database} at {URI} not found. Try to create specified database.".capitalize()
+                    )
+                    try:
+                        with _sync_driver.session() as session:
+                            session.run(
+                                f"CREATE DATABASE `{database}` IF NOT EXISTS"
+                            )
+                            logger.info(f"{database} at {URI} created".capitalize())
+                            connected = True
+                    except (
+                        neo4jExceptions.ClientError,
+                        neo4jExceptions.DatabaseError,
+                    ) as e:
+                        if (
+                            e.code
+                            == "Neo.ClientError.Statement.UnsupportedAdministrationCommand"
+                        ) or (
+                            e.code == "Neo.DatabaseError.Statement.ExecutionFailed"
+                        ):
+                            if database is not None:
+                                logger.warning(
+                                    "This Neo4j instance does not support creating databases. Try to use Neo4j Desktop/Enterprise version or DozerDB instead. Fallback to use the default database."
                                 )
-                                logger.info(f"{database} at {URI} created".capitalize())
-                                connected = True
-                        except (
-                            neo4jExceptions.ClientError,
-                            neo4jExceptions.DatabaseError,
-                        ) as e:
-                            if (
-                                e.code
-                                == "Neo.ClientError.Statement.UnsupportedAdministrationCommand"
-                            ) or (
-                                e.code == "Neo.DatabaseError.Statement.ExecutionFailed"
-                            ):
-                                if database is not None:
-                                    logger.warning(
-                                        "This Neo4j instance does not support creating databases. Try to use Neo4j Desktop/Enterprise version or DozerDB instead. Fallback to use the default database."
-                                    )
-                            if database is None:
-                                logger.error(f"Failed to create {database} at {URI}")
-                                raise e
-
-                if connected:
-                    break
+                        else:
+                            logger.error(f"Failed to create {database} at {URI}")
+                            raise e
+                        if database is None:
+                            logger.error(f"Failed to create {database} at {URI}")
+                            raise e
 
     def __post_init__(self):
         self._node_embed_algorithms = {
