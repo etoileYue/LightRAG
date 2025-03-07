@@ -15,6 +15,8 @@ from lightrag.kg import (
     verify_storage_implementation,
 )
 
+import traceback
+
 from .base import (
     BaseGraphStorage,
     BaseKVStorage,
@@ -899,11 +901,13 @@ class LightRAG:
                             except Exception as e:
                                 # Log error and update pipeline status
                                 error_msg = (
-                                    f"Failed to process document {doc_id}: {str(e)}"
+                                    f"Failed to process document {doc_id}: {str(e)}\n\
+                                    An error occurred: {type(e).__name__}:{e}"
                                 )
                                 logger.error(error_msg)
                                 pipeline_status["latest_message"] = error_msg
                                 pipeline_status["history_messages"].append(error_msg)
+                                traceback.print_exc()
 
                                 # Cancel other tasks as they are no longer meaningful
                                 for task in [

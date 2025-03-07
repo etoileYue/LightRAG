@@ -10,7 +10,7 @@ import logging.handlers
 import os
 import re
 from dataclasses import dataclass
-from functools import wraps
+from functools import wraps, partial
 from hashlib import md5
 from typing import Any, Callable
 import xml.etree.ElementTree as ET
@@ -884,3 +884,14 @@ def find_and_remove_markdown_title(md_content):
                 content_without_title.append(line)
 
     return '\n'.join(headers), '\n'.join(content_without_title)
+
+async def concurrency_controller(sem, func, *args):
+    async with sem:
+        return await func(*args)
+
+async def bulk_upsert(data_items, upsert_func, concurrency=50):
+    sem = asyncio.Semaphore(concurrency)
+    controlled_upsert = partial(concurrency_controller, sem, upsert_func)
+    return await asyncio.gather(*[
+        controlled_upsert(*item) for item in data_items
+    ])

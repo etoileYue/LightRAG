@@ -25,7 +25,8 @@ from .utils import (
     statistic_data,
     get_conversation_turns,
     verbose_debug,
-    find_and_remove_markdown_title
+    find_and_remove_markdown_title,
+    bulk_upsert
 )
 from .base import (
     BaseGraphStorage,
@@ -37,6 +38,7 @@ from .base import (
 from .prompt import GRAPH_FIELD_SEP, PROMPTS
 import time
 from dotenv import load_dotenv
+from asyncio import Semaphore
 
 # Load environment variables
 load_dotenv(override=True)
@@ -524,19 +526,33 @@ async def extract_entities(
         for k, v in m_edges.items():
             maybe_edges[tuple(sorted(k))].extend(v)
 
-    all_entities_data = await asyncio.gather(
-        *[
-            _merge_nodes_then_upsert(k, v, knowledge_graph_inst, global_config)
-            for k, v in maybe_nodes.items()
-        ]
+    concurrency = 100
+
+    all_entities_data = await bulk_upsert(
+        [(k, v, knowledge_graph_inst, global_config) for k, v in maybe_nodes.items()],
+        _merge_nodes_then_upsert,
+        concurrency
     )
 
-    all_relationships_data = await asyncio.gather(
-        *[
-            _merge_edges_then_upsert(k[0], k[1], v, knowledge_graph_inst, global_config)
-            for k, v in maybe_edges.items()
-        ]
+    # all_entities_data = await asyncio.gather(
+    #     *[
+    #         _merge_nodes_then_upsert(k, v, knowledge_graph_inst, global_config)
+    #         for k, v in maybe_nodes.items()
+    #     ]
+    # )
+
+    all_relationships_data = await bulk_upsert(
+        [(k[0], k[1], v, knowledge_graph_inst, global_config) for k, v in maybe_edges.items()],
+        _merge_edges_then_upsert,
+        concurrency
     )
+
+    # all_relationships_data = await asyncio.gather(
+    #     *[
+    #         _merge_edges_then_upsert(k[0], k[1], v, knowledge_graph_inst, global_config)
+    #         for k, v in maybe_edges.items()
+    #     ]
+    # )
 
     if not (all_entities_data or all_relationships_data):
         log_message = "Didn't extract any entities and relationships."
