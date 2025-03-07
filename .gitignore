@@ -49,9 +49,9 @@ inputs/
 rag_storage/
 examples/input/
 examples/output/
+resources/
 
-# Miscellaneous
-.DS_Store
+# Miscellaneous.DS_Store
 TODO.md
 ignore_this.txt
 *.ignore.*
