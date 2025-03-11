@@ -70,7 +70,8 @@ async def initialize_rag():
             max_token_size=8192,
             func=embedding_func,
         ),
-        graph_storage="Neo4JStorage"
+        graph_storage="Neo4JStorage",
+        vector_storage="MilvusVectorDBStorage",
     )
 
     await rag.initialize_storages()
@@ -84,7 +85,7 @@ async def main():
         rag = await initialize_rag()
 
         with open("./resources/short.md", "r", encoding="utf-8") as f:
-            await rag.ainsert(f.read())
+            await rag.ainsert(f.read(), "@data@")
 
         # Perform hybrid search
         # print(
