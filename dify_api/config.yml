@@ -1,0 +1,41 @@
+app_name: 知识库
+app_version: 0.0.1
+
+api_server:
+  host: 0.0.0.0
+  port: 21590
+
+# API 是否开启跨域，默认为False，如果需要开启，请设置为True
+cross_domain:
+  open_cross_domain: False
+  # 跨域配置
+  cross_domain_config:
+    # 允许的源
+    allow_origins:
+      - '*'
+    # 允许的请求方法
+    allow_methods:
+      - '*'
+    # 允许的请求头
+    allow_headers:
+      - '*'
+    # 是否允许发送cookie
+    credentials: true
+
+dify_api:
+  url: http://10.2.45.211:5001/v1/chat-messages
+  api_key: app-wVy9k3IsM9XogmV3UOMNieEK   # app-6LylfOv87D5tqxtsO3ZQ6J1o 测试 app-clgZV50p6nEaNKix1g0FeBLS
+  timeout: 240 # 超时时间，单位为秒
+  retries: 2  # 重试次数
+  concurrency: 10 # 并发请求数
+  wait_timeout: 100 # 等待响应的超时时间
+  default_response0:
+    status: error0
+    answer: 您的问题已超出上市公司公开信息的范畴，我暂时无法直接回复。请您关注公司后续的公告。如果您有其他问题，请随时联系我。感谢您的理解和支持。
+  default_response1:
+    status: error1
+    answer: 抱歉，系统暂时繁忙，无法回答您的问题。我们会尽快回复您，谢谢您的理解。
+
+log_config:
+  log_file: /workspace/LightRAG/dify_api/dify_api.log
+  log_level: DEBUG
