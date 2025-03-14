@@ -3,6 +3,7 @@ import numpy as np
 import os
 import yaml
 
+
 async def llm_model_func(
     prompt, system_prompt=None, history_messages=[], keyword_extraction=False, **kwargs
 ) -> str:
@@ -44,11 +45,13 @@ global_config = {
     "working_dir": "./dickens"
 }
 
+
+
+
 def load_yaml(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f)
     return data
-
 
 # 获取当前脚本的绝对路径
 current_file_path = os.path.abspath(__file__)

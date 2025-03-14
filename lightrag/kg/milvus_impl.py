@@ -113,7 +113,7 @@ class MilvusVectorDBStorage(BaseVectorStorage):
                 "params": {"radius": self.cosine_better_than_threshold},
             },
         )
-        print(results)
+        # print(results)
         return [
             {**dp["entity"], "id": dp["id"], "distance": dp["distance"]}
             for dp in results[0]

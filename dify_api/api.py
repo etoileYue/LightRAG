@@ -1,5 +1,6 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Security, HTTPException
+from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from dify_api.config import CONFIG
 from dify_api.logger import set_logger
@@ -12,6 +13,7 @@ from dify_api.utils import(
     upsert_chunks,
     entites_from_kw,
     edges_from_kw,
+    kv_storage_initialize
 )
 # log
 config_log = CONFIG['log_config']
@@ -38,36 +40,69 @@ def create_app():
     mount_app_routes(app)
     return app
 
+api_key_header = APIKeyHeader(name="Authorization", auto_error=False)
+
+async def api_key_auth(api_key: str = Depends(api_key_header)):
+    VALID_API_KEYS = CONFIG["dify_api"]["api_keys"]
+    # 检查是否存在Authorization头
+    if not api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Authorization header is missing",
+        )
+    
+    # 分割Bearer和API Key
+    parts = api_key.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authorization header format. Expected 'Bearer <API-KEY>'",
+        )
+    
+    received_api_key = parts[1]
+
+    if received_api_key not in VALID_API_KEYS:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid API Key",
+        )
+    return received_api_key
 
 def mount_app_routes(app: FastAPI):
     app.post(
-        "/retrieval/keywords/entities",
-        summary="知识库检索，通过关键词找实体"
+        "/keywords/entities/retrieval",
+        summary="知识库检索，通过关键词找实体",
+        dependencies=[Depends(api_key_auth)]
     )(entites_from_kw)
 
     app.post(
-        "/retrieval/keywords/edges",
-        summary="知识库检索，通过关键词找关系"
+        "/keywords/edges/retrieval",
+        summary="知识库检索，通过关键词找关系",
+        dependencies=[Depends(api_key_auth)]
     )(edges_from_kw)
 
     app.post(
-        "/retrieval/node/edge",
+        "/node/edge/retrieval",
         summary="知识库检索，通过节点找边",
+        dependencies=[Depends(api_key_auth)]
     )(edge_from_entities)
 
     app.post(
-        "/retrieval/node/text_unit",
+        "/node/text_unit/retrieval",
         summary="知识库检索，通过节点找相关文本",
+        dependencies=[Depends(api_key_auth)]
     )(text_units_from_entities)
 
     app.post( 
-        "/retrieval/edge/node",
+        "/edge/node/retrieval",
         summary="知识库检索，通过边找节点",
+        dependencies=[Depends(api_key_auth)]
     )(node_from_relations)
 
     app.post(
-        "/retrieval/edge/text_unit",
+        "/edge/text_unit/retrieval",
         summary="知识库检索，通过边找相关文本",
+        dependencies=[Depends(api_key_auth)]
     )(text_units_from_relations)
 
     app.post(

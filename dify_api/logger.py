@@ -21,3 +21,5 @@ def set_logger(name, log_level=logging.DEBUG, log_file="dify_api.log"):
     # 将处理器添加到 Logger
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
+
+    return logger
