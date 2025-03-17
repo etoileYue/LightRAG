@@ -49,7 +49,7 @@ inputs/
 rag_storage/
 examples/input/
 examples/output/
-resources/
+# resources/
 
 # Miscellaneous.DS_Store
 TODO.md

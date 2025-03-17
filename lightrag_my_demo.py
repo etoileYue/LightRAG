@@ -83,8 +83,9 @@ async def main():
         # Initialize RAG instance
         rag = await initialize_rag()
 
-        with open("./resources/short.md", "r", encoding="utf-8") as f:
-            await rag.ainsert(f.read())
+        await rag.ainsert("test text")
+        # with open("/workspace/LightRAG/resources/short.md", "r", encoding="utf-8") as f:
+        #     await rag.ainsert(f.read(), "@data@")
 
         # Perform hybrid search
         # print(
