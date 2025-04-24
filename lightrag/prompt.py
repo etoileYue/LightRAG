@@ -158,7 +158,7 @@ MANY entities and relationships were missed in the last extraction.
 - entity_name: Name of the entity, use same language as input text. If English, capitalized the name.
 - entity_type: One of the following types: [{entity_types}]
 - entity_description: Comprehensive description of the entity's attributes and activities
-Format each entity as ("entity"{tuple_delimiter}<entity_name>{tuple_delimiter}<entity_type>{tuple_delimiter}<entity_description>
+Format each entity as ("entity"{tuple_delimiter}<entity_name>{tuple_delimiter}<entity_type>{tuple_delimiter}<entity_description>)
 
 2. From the entities identified in step 1, identify all pairs of (source_entity, target_entity) that are *clearly related* to each other.
 For each pair of related entities, extract the following information:
@@ -222,7 +222,7 @@ When handling relationships with timestamps:
 - Use markdown formatting with appropriate section headings
 - Please respond in the same language as the user's question.
 - Ensure the response maintains continuity with the conversation history.
-- List up to 5 most important reference sources at the end under "References" section. Clearly indicating whether each source is from Knowledge Graph (KG) or Vector Data (DC), and include the file path if available, in the following format: [KG/DC] Source content (File: file_path)
+- List up to 5 most important reference sources at the end under "References" section. Clearly indicating whether each source is from Knowledge Graph (KG) or Vector Data (DC), and include the file path if available, in the following format: [KG/DC] file_path
 - If you don't know the answer, just say so.
 - Do not make anything up. Do not include information not provided by the Knowledge Base."""
 
@@ -320,7 +320,7 @@ When handling content with timestamps:
 - Use markdown formatting with appropriate section headings
 - Please respond in the same language as the user's question.
 - Ensure the response maintains continuity with the conversation history.
-- List up to 5 most important reference sources at the end under "References" section. Clearly indicating whether each source is from Knowledge Graph (KG) or Vector Data (DC), and include the file path if available, in the following format: [KG/DC] Source content (File: file_path)
+- List up to 5 most important reference sources at the end under "References" section. Clearly indicating whether each source is from Knowledge Graph (KG) or Vector Data (DC), and include the file path if available, in the following format: [KG/DC] file_path
 - If you don't know the answer, just say so.
 - Do not include information not provided by the Document Chunks."""
 
@@ -382,6 +382,6 @@ When handling information with timestamps:
 - Ensure the response maintains continuity with the conversation history.
 - Organize answer in sections focusing on one main point or aspect of the answer
 - Use clear and descriptive section titles that reflect the content
-- List up to 5 most important reference sources at the end under "References" section. Clearly indicating whether each source is from Knowledge Graph (KG) or Vector Data (DC), and include the file path if available, in the following format: [KG/DC] Source content (File: file_path)
+- List up to 5 most important reference sources at the end under "References" section. Clearly indicating whether each source is from Knowledge Graph (KG) or Vector Data (DC), and include the file path if available, in the following format: [KG/DC] file_path
 - If you don't know the answer, just say so. Do not make anything up.
 - Do not include information not provided by the Data Sources."""
